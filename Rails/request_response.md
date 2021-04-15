@@ -9,8 +9,24 @@
 - データベース  
 ---
 
-WEBブラウザ上で、`link_to`で指定されている`tasks_path`の `一覧`ボタンを押下するとWEBサーバーにHTTPリクエストが送られる。  
-一覧ページを表示させるにはHTTPリクエストの`Request URL`に`routes.rb`で設定した一覧ページのエンドポイント`/users `を指定し、`Request Method`には`GET`を指定する。  
+WEBブラウザから`/users` というURLに対して`GET`のリクエストをWEBサーバ（Railsアプリケーション)に送る。  
+具体的にはlink_to(aタグ生成)にusers_path(href属性のリンク先である/usersを出力)を指定することでHTML側で`<a href="/users">`が出力され`/users`に対して`GET`リクエストが送られる。
+
+```
+views
+
+  = link_to '一覧', users_path, class: 'nav-link'
+
+↓
+
+HTML変換
+
+　　<a class="nav-link" href="/users">一覧</a>  
+
+```
+
+WEBサーバ（Railsアプリケーション）はユーザーの一覧を取得する為に`routes.rb`に定義されているルーティングをもとに利用されるコントローラ#アクションを決定する。  
+今回の場合だと`routes.rb`に`resources :users`を記述し、Usersコントローラーのindexアクションに割り振られるようハンドリングしている。  
 
 ```
 routes.rb
@@ -21,12 +37,11 @@ end
 
 ↓
 
-rails routes 
+rails routes  
 
-GET    /users/new(.:format)      users#new
+users GET    /users(.:format)    users#index
+
 ``` 
-
-Railsサーバーはリクエストをroutesに送り、routesはHTTPリクエスト（URLとHTTPメソッド）に合致しているUsersコントローラーのindexアクションに割り振られる。
 
 Usersコントローラーはindexアクションに記述されているUserモデルに命令を出してUserモデルはデータベースから該当するデータをコントローラーに返す。   
 (下記の指示であればユーザーの情報全てを抽出)  
@@ -75,8 +90,24 @@ params
 
 ### 新規作成ページを表示する    
 
-WEBブラウザ上で、`link_to`で指定されている`new_task_path`の `新規登録`ボタンを押下するとWEBサーバーにHTTPリクエストが送られる。
-新規作成ページを表示するにはHTTPリクエストの`Request URL`に`routes.rb`で設定した新規作成のエンドポイント`/tasks/new`のURLを指定し、`Request Method`には`GET`を指定する。  
+WEBブラウザから`/tasks/new`というURLに対して`GET`のリクエストをWEBサーバ（Railsアプリケーション)に送る。  
+link_to(aタグ生成)にnew_task_path(href属性のリンク先である/tasks/newを出力)を指定することでHTML側で`<a href="/tasks/new">`が出力され`/tasks/new`に対して`GET`リクエストが送られる。
+
+```
+views
+
+  = link_to '新規登録', new_task_path, class: 'btn btn-primary'
+
+↓
+
+HTML変換
+
+　　<a class="btn btn-primary" href="/tasks/new">新規登録</a>  
+
+```
+
+WEBサーバ（Railsアプリケーション）は`routes.rb`に定義されているルーティングをもとに利用されるコントローラ#アクションを決定する。  
+今回の場合だと`routes.rb`に`resources :tasks`を記述し、Tasksコントローラーのnewアクションに割り振られるようハンドリングをしている。
 
 ```
 routes.rb
@@ -92,9 +123,7 @@ rails routes
 GET    /tasks/new(.:format)      tasks#new
 ``` 
 
-Railsサーバーはリクエストをroutesに送り、routesはHTTPリクエスト（URLとHTTPメソッド）に合致したtasksコントローラーのnewアクションに振り分けられる。  
-
-tasksコントローラーのnewアクションでTaskモデルをインスタンス化してフォームで送られる値をデータベースに保存できるよう@taskに代入する。 
+TasksコントローラーのnewアクションでTaskモデルをインスタンス化してformで送られる値をデータベースに保存できるよう@taskに代入する。 
 
 ```
   def new
@@ -110,7 +139,7 @@ WEBブラウザはリクエストが返ってきたらHTTPレスポンスの`Con
 
 ### タスク名(name)を入力する
 
-新規作成ページのフォームにはrailsで情報を送信するためのヘルパーメソッドである`form_with`を使用する。  
+新規作成ページのformにはRailsで情報を送信するためのヘルパーメソッドである`form_with`を使用する。  
 `form_with`を使うことにより入力フォームに必要なHTMLを簡単に作成することができる。
 
 ```
@@ -128,7 +157,7 @@ new.html.slim
 ↓  
 
 ```
-HTMLに変換
+HTML
 
 <form action="/tasks" accept-charset="UTF-8" method="post">
   <input name="utf8" type="hidden" value="✓">
@@ -141,13 +170,14 @@ HTMLに変換
 </form>
 ```
 `form_with`は、HTML側に`method="post"`を自動で設定してくれる。  
-また`persisted?`メソッドでデータベースに値があるかを確認しfalseなら新規登録(create)、trueなら更新(update)といった判断ができるようになっているのでaction属性も自動的に判別し設定してくれる。
+また`persisted?`メソッドでデータベースに値があるかを確認しfalseなら新規登録(create)、trueなら更新(update)といった判断も自動的にしてくれる。
 
 ### 作成ボタンを押す  
 
-新規作成画面のフォームからタスク名(name)を入力し`form_with`のsubmitボタンを押下するとHTTPリクエストが送られる。  
+作成ボタンを押下するとWEBブラウザから`/tasks`というURLに対して`POST`のリクエストがWEBサーバ（Railsアプリケーション)に送られる。  
+form_withが`persisted?`メソッドを使って新規登録であることを判断し、tasks#createアクションのURL`/tasks`を指定することでHTML側で`<form action="/tasks">`が出力され`/tasks`に対して`POST`リクエストが送られる。
 
-HTTPリクエストの`Request URL`に`routes.rb`で設定したcreateアクションへ飛ばす為のエンドポイント`/tasks`を指定し、`Request Method`には`POST`を指定する。  
+WEBサーバ（Railsアプリケーション）は`routes.rb`に定義されているTasksコントローラーのcreateアクションに割り振られるようにハンドリングする。
 
 ```
 rails routes 
@@ -158,9 +188,20 @@ POST   /tasks(.:format)          tasks#create
 ![POST](https://gyazo.com/4846eee216bd81d027609fa6b6ff447a.png)　　
 ![POST](https://gyazo.com/a8c777b3d844c07442556cf2a9e683c4.png)  
 
-Railsサーバーはリクエストをroutesに送り、routesはHTTPリクエスト（URLとHTTPメソッド）に合致したtasksコントローラーのcreateアクションに割り振られる。
+createアクションに渡された`params`をデータベースに保存するには`strong_parameters`を使用する。
+
+理由：コントローラーが受け取った`params`を自動的にモデルへ渡せるような仕様だった場合、攻撃者に悪用される可能性がある為。  
+createアクションに`params`を記述した場合は、セキュリティ担保の為、例外が走る。  
+
+`strong_parameters`はparamsの特定のキーに紐付く値だけを抽出する`require`メソッドとカラムのパラメーターのみをデータベースへ保存の許可をする`permit`メソッドを使用する。
+
+`require`メソッドは、`name="task[name]"`でいうと`task`をさし、`permit`メソッドは`[name]`を指している。
+
+また、外部から不正に呼び出されることのないように`private`宣言下に記述する。
 
 ```
+  空のタスクモデルのインスタンスにストロングパラメーターを引数としてセットする。
+
   def create
     @task = current_user.tasks.new(task_params)
     if @task.save
@@ -170,6 +211,8 @@ Railsサーバーはリクエストをroutesに送り、routesはHTTPリクエ�
     end  
   end
 
+  strong_parameters↓
+
 　private
 
   def task_params
@@ -177,12 +220,8 @@ Railsサーバーはリクエストをroutesに送り、routesはHTTPリクエ�
   end
 
 ```
-フォームで入力されたパラメーター(値)は`form_with`によってcreateアクションへ渡された後、paramsメソッドを使用してデータベースに保存される。  
-paramsはcreateメソッドには書かず、permitメソッドを使って`ストロングパラメーター`を設定する。  
-(理由：paramsで取得したパラメーターに悪意を持ったユーザーが保存したくないパラメーター属性を含めてしまうと、その情報まで保存されてしまう危険性があるため)
-
-上記の`task_params`で設定している、`params.require(:task).permit(:name)`はformの`name="task[name]"`をさすので値がちゃんと送られるようになっている。 
-もしモデルで設定しているvalidatesやデータベースのマイグレーション時に設定したnull: falseに反して登録をした場合、`render :new`によって入力した内容は保持されたまま新規登録画面が描画される。問題がなければ`@task.save`によってデータベースに保存される。
+ 
+モデルで設定しているvalidatesやデータベースのマイグレーション時に設定したnull: falseに反して登録をした場合、`render :new`によって入力された内容は保持された状態で新規登録画面が描画される。問題がなければ`@task.save`によってデータベースに保存される。
 
 
 ### タスクの詳細画面に遷移する  
