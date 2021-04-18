@@ -19,7 +19,7 @@ views
 
 ↓
 
-HTML変換
+HTML
 
 　　<a class="nav-link" href="/users">一覧</a>  
 
@@ -100,7 +100,7 @@ views
 
 ↓
 
-HTML変換
+HTML
 
 　　<a class="btn btn-primary" href="/tasks/new">新規登録</a>  
 
@@ -175,7 +175,7 @@ HTML
 ### 作成ボタンを押す  
 
 作成ボタンを押下するとWEBブラウザから`/tasks`というURLに対して`POST`のリクエストがWEBサーバ（Railsアプリケーション)に送られる。  
-form_withが`persisted?`メソッドを使って新規登録であることを判断し、tasks#createアクションのURL`/tasks`を指定することでHTML側で`<form action="/tasks">`が出力され`/tasks`に対して`POST`リクエストが送られる。
+form_withが`persisted?`メソッドを使って新規登録であることを判断し、tasks#createアクションのURL`/tasks`を指定することでHTML側で`<form action="/tasks">`が出力され`/tasks`に対して`POST`リクエストが送られる。また`params`はinputタグの`<name="task[name]">`に入力された値がHTTPリクエストの`Form Data`に格納されてリクエストが送られる。
 
 WEBサーバ（Railsアプリケーション）は`routes.rb`に定義されているTasksコントローラーのcreateアクションに割り振られるようにハンドリングする。
 
@@ -186,7 +186,13 @@ POST   /tasks(.:format)          tasks#create
 ``` 
 
 ![POST](https://gyazo.com/4846eee216bd81d027609fa6b6ff447a.png)　　
-![POST](https://gyazo.com/a8c777b3d844c07442556cf2a9e683c4.png)  
+![POST](https://gyazo.com/a8c777b3d844c07442556cf2a9e683c4.png)    
+
+`params`はWEBサーバ（Railsアプリケーション)に送られるとRails側でハッシュ形式に変換される。  
+```
+[2] pry(#<TasksController>)> params[:task]
+=> <ActionController::Parameters {"name"=>"a"} permitted: false>
+```
 
 createアクションに渡された`params`をデータベースに保存するには`strong_parameters`を使用する。
 
@@ -195,7 +201,7 @@ createアクションに`params`を記述した場合は、セキュリティ担
 
 `strong_parameters`はparamsの特定のキーに紐付く値だけを抽出する`require`メソッドとカラムのパラメーターのみをデータベースへ保存の許可をする`permit`メソッドを使用する。
 
-`require`メソッドは、`name="task[name]"`でいうと`task`をさし、`permit`メソッドは`[name]`を指している。
+`require`メソッドは、`name="task[name]"`でいうと`task`をさし、`permit`メソッドは`[name]`を指している。  
 
 また、外部から不正に呼び出されることのないように`private`宣言下に記述する。
 
@@ -222,7 +228,6 @@ createアクションに`params`を記述した場合は、セキュリティ担
 ```
  
 モデルで設定しているvalidatesやデータベースのマイグレーション時に設定したnull: falseに反して登録をした場合、`render :new`によって入力された内容は保持された状態で新規登録画面が描画される。問題がなければ`@task.save`によってデータベースに保存される。
-
 
 ### タスクの詳細画面に遷移する  
 
